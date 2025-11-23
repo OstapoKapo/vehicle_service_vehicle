@@ -1,8 +1,6 @@
-# --- ЕТАП 1: "Builder" (Збірка) ---
+# Stage 1: build
 FROM node:20 AS builder
-
-# Встановлюємо робочу директорію
-WORKDIR /usr/src/app
+WORKDIR /app
 
 # Копіюємо package.json та package-lock.json
 COPY package*.json ./
@@ -10,34 +8,29 @@ COPY package*.json ./
 # Встановлюємо всі залежності
 RUN npm install
 
-# Копіюємо решту коду проекту
+# Копіюємо весь код
 COPY . .
 
-# (Опціонально) Якщо ви використовуєте TypeScript, розкоментуйте:
-# RUN npm run build
+# Генеруємо Prisma Client
+RUN npx prisma generate
 
+# Будуємо TypeScript
+RUN npm run build
 
-# --- ЕТАП 2: "Production" (Продакшн) ---
-FROM node:20-alpine AS production
+# Stage 2: production
+FROM node:20
+WORKDIR /app
 
-ENV NODE_ENV=production
-WORKDIR /usr/src/app
-
-# Копіюємо package.json та package-lock.json
+# Копіюємо prod залежності
 COPY package*.json ./
+RUN npm install --production
 
-# Встановлюємо *лише* продакшн-залежності
-RUN npm ci --omit=dev
+# Копіюємо build та Prisma client
+COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
+COPY --from=builder /app/node_modules/@prisma/client ./node_modules/@prisma/client
 
-# Копіюємо зібраний код з етапу "builder"
-COPY --from=builder /usr/src/app .
-# (Якщо був етап 'RUN npm run build', то копіюйте зібрану папку, напр. './dist')
-# COPY --from=builder /usr/src/app/dist ./dist
+# Копіюємо .env
 
-# Створюємо безпечного користувача
-RUN addgroup -S appgroup && adduser -S appuser -G appgroup
-USER appuser
-
-# ВАЖЛИВО: Команда запуску
-# 'server.js' - це ваш головний файл (може бути index.js, app.js тощо)
-CMD [ "node", "index.js" ]
+EXPOSE 3001
+CMD ["node", "dist/index.js"]
