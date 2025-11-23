@@ -1,0 +1,29 @@
+name: Deploy Vehicle Service
+
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          port: 22
+          script: |
+            cd ~/vehicle_service/vehicle_back
+            
+            git pull origin main
+            
+            cd ..
+            
+            sudo docker-compose up -d --no-deps --build vehicle_service_app vehicle_worker_app
+            
+            sudo docker-compose exec -T vehicle_service_app npx prisma db push
+            
+            sudo docker image prune -f
