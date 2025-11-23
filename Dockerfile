@@ -2,35 +2,31 @@
 FROM node:20 AS builder
 WORKDIR /app
 
-# Копіюємо package.json та package-lock.json
 COPY package*.json ./
+COPY prisma ./prisma/
 
-# Встановлюємо всі залежності
 RUN npm install
 
-# Копіюємо весь код
 COPY . .
 
-# Генеруємо Prisma Client
 RUN npx prisma generate
-
-# Будуємо TypeScript
 RUN npm run build
 
 # Stage 2: production
-FROM node:20
+FROM node:20-slim
+# (Раджу використовувати node:20-slim, як і в юзері, це зекономить місце)
 WORKDIR /app
 
-# Копіюємо prod залежності
+RUN apt-get update -y && apt-get install -y openssl ca-certificates
+
 COPY package*.json ./
 RUN npm install --production
 
-# Копіюємо build та Prisma client
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
 COPY --from=builder /app/node_modules/@prisma/client ./node_modules/@prisma/client
 
-# Копіюємо .env
+COPY --from=builder /app/prisma ./prisma
 
 EXPOSE 3001
 CMD ["node", "dist/index.js"]

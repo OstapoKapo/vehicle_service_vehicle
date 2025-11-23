@@ -26,4 +26,4 @@ jobs:
             
             sudo docker-compose exec -T vehicle_service npx prisma db push
             
-            sudo docker image prune -fv
+            sudo docker image prune -f
