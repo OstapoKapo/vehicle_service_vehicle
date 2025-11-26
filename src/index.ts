@@ -19,7 +19,7 @@ app.use(cors({
   credentials: true,
 }));
 app.use(express.json());
-app.use('/vehicles', vehicleRouter);
+app.use('/api/vehicles', vehicleRouter);
 app.use(errorMiddleware); 
 
 
