@@ -11,6 +11,8 @@ export const validateDto = (dtoClass: Constructor<any>): RequestHandler => {
 
     const errors: ValidationError[] = await validate(dtoObj);
 
+    console.log('Validation errors:', errors);
+
     if (errors.length > 0) {
    
       const formattedErrors = errors.map(error => ({

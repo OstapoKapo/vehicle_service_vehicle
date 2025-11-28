@@ -9,8 +9,8 @@ import vehicleRouter from './routes/vehicleRoute.js';
 dotenv.config();
 const app = express();
 app.use(cookieParser()); 
-const PORT = process.env.PORT || 3002;
 app.set('trust proxy', 1);
+const PORT = process.env.PORT || 3002;
 
 app.use(helmet());
 app.use(cors({
