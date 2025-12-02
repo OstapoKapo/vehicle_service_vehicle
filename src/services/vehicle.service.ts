@@ -51,6 +51,12 @@ class VehicleService {
         return {message: 'Vehicle updated successfully' };
     }
 
+    public async deleteVehicle(userId: string): Promise<void> {
+        await prisma.vehicle.deleteMany({
+            where: { userId }
+        });
+    }
+
 }
 
 export default new VehicleService();
